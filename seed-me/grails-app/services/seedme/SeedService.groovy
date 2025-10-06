@@ -22,7 +22,6 @@ import grails.util.BuildSettings
 import org.apache.commons.io.FilenameUtils as FNU
 import grails.plugins.GrailsPluginManager
 import grails.core.GrailsApplication
-import static grails.async.Promises.*
 import groovy.util.logging.Slf4j
 import groovy.transform.CompileStatic
 
@@ -32,7 +31,7 @@ class SeedService {
 	static transactional = false
 
 	org.grails.datastore.mapping.model.MappingContext grailsDomainClassMappingContext
-	
+
 	GrailsApplication grailsApplication
 	GrailsPluginManager pluginManager
 	def sessionFactory
@@ -44,7 +43,7 @@ class SeedService {
 	static environmentList = ['dev', 'test', 'prod']
 	static zipPackageExtensions = ['zip', 'morpkg', 'mpkg', 'mopkg']
 	static packageManifestName = 'package-manifest.json'
-	
+
 	//triggers processing of seed files included inside the application
 	void installSeedData() {
 		def (seedFiles, seedTemplates) = getSeedFiles()
@@ -232,7 +231,7 @@ class SeedService {
 				tmpSeedSet.seedCheckId = seedCheck.id
 				seedSets[tmpSetKey] = tmpSeedSet
 				byPlugin[pluginName][tmpSetKey] = tmpSeedSet
-				byName[tmpSeedName] << tmpSeedSet	
+				byName[tmpSeedName] << tmpSeedSet
 			}
 		}
 		//done - return all sets
@@ -252,7 +251,7 @@ class SeedService {
 			while((nRead = digestStream.read(buffer, 0, buffer.length)) != -1) {
 				// noop (just to complete the stream)
 			}
-			rtn = digest.digest().encodeHex().toString() 
+			rtn = digest.digest().encodeHex().toString()
 		} catch(IOException ioe) {
 			//Its ok if the stream is already closed so ignore error
 		} finally {
@@ -269,7 +268,7 @@ class SeedService {
 			md = MessageDigest.getInstance('MD5')
 			md.update(digestString.bytes)
 			byte[] checksum = md.digest()
-			rtn = checksum.encodeHex().toString() 
+			rtn = checksum.encodeHex().toString()
 		} catch(e) {
 			//failed
 		}
@@ -283,7 +282,7 @@ class SeedService {
 	private buildSeedSet(name, seedContent, plugin, type, Boolean checksumMatched) {
 		def rtn = [seedList:[], dependsOn:[], name:name, plugin:plugin, seedVersion:null]
 		try {
-			//common 
+			//common
 			rtn.checksum = MessageDigest.getInstance('MD5').digest(seedContent.bytes).encodeHex().toString()
 			rtn.checksumMatched = checksumMatched
 			//if the type is groovy
@@ -418,7 +417,7 @@ class SeedService {
 				if(value.containsKey('domainClass')) {
 					value.remove('domainClass')
 				}
-				def tmpObj = findSeedObject(domain, value) 
+				def tmpObj = findSeedObject(domain, value)
 				if(tmpObj) {
 					data[key] = tmpObj
 				} else {
@@ -467,7 +466,7 @@ class SeedService {
 				seedObject = seedObject?."${tmpObjectMeta['property']}"
 			if(seedObject) {
 				data[key] = seedObject
-			} 
+			}
 		} else if(value instanceof Map && value._literal == true) {
 			data[key] = value.value
 		} else if(value instanceof Map && value._template == true) {
@@ -529,7 +528,7 @@ class SeedService {
 					rtn = rtn."${tmpMeta.property}"
 				}
 			}
-			
+
 		}
 		return rtn
 	}
@@ -575,9 +574,9 @@ class SeedService {
 							}
 							log.error("Seed Error Saving ${tmpObj.toString()}\n${errors.join("\n")}")
 						}
-						
+
 					}
-					
+
 				}
 			} else {
 				tmpObj = domain.newInstance()
@@ -660,10 +659,10 @@ class SeedService {
 					if(!isPluginExcluded(plugin.name)) {
 						def seedPath = [plugin.pluginDir.getPath(), seedRoot].join(File.separator)
 						seedPaths[plugin.name] = seedPath
-					}	
+					}
 				} catch(exc) {
 					//binary plugins wont work in grails 3 with current design
-				}						
+				}
 			}
 			seedPaths.application = seedRoot
 		}
@@ -766,7 +765,7 @@ class SeedService {
 			return item.contains('templates/')
 		}
 		//get environment matching seed
-		seedList = seedList.findAll{ item -> 
+		seedList = seedList.findAll{ item ->
 			def itemArgs = item.tokenize('/')
 			return item.startsWith("${env}/") || item.startsWith("env-${env}/") || itemArgs.size() == 1 || (!environmentList.contains(itemArgs[0]) && !item.contains('templates/'))
 		}
@@ -792,7 +791,7 @@ class SeedService {
 				else if(seedName.endsWith('.yaml') || seedName.endsWith('.yml'))
 					seedFiles << [file:res, name:seedName, plugin:pluginName, type:'yaml', fileSource:'classLoader']
 				else if(seedName.endsWith('.json'))
-					seedFiles << [file:res, name:seedName, plugin:pluginName, type:'json', fileSource:'classLoader']	
+					seedFiles << [file:res, name:seedName, plugin:pluginName, type:'json', fileSource:'classLoader']
 				else if(seedName.endsWith('.zip') || seedName.endsWith('.morpkg') || seedName.endsWith('.mopkg') || seedName.endsWith('.mpkg'))
 					appendPackageFiles(seedFiles, seedTemplates, pluginName, res)
 			}
@@ -928,33 +927,29 @@ class SeedService {
 						//def seedCheck = checkChecksum(setKey)
 						if(seedSetsLeft[setKey]) { // && (seedCheck?.checksum != set.checksum)) {
 							log.debug("processing: ${setKey}")
-							def seedTask = task {
-								SeedMeChecksum.withNewSession { session ->
-									SeedMeChecksum.withTransaction {
-										try {
-											set.seedList.each { seedItem ->
-												processSeedItem(set, seedItem, templates)
-											}
-											updateChecksum(set.seedCheckId, set.checksum, setKey, set.seedVersion)
-											seedSetsLeft[setKey] = null
-											seedSetsLeft.remove(setKey)
-											seedOrder << set.name
-											gormFlush(session)
-										} catch(setError) {
-											log.error("error processing seed set ${set.name}", setError)
+							SeedMeChecksum.withNewSession { session ->
+								SeedMeChecksum.withTransaction {
+									try {
+										set.seedList.each { seedItem ->
+											processSeedItem(set, seedItem, templates)
 										}
+										updateChecksum(set.seedCheckId, set.checksum, setKey, set.seedVersion)
+										seedSetsLeft[setKey] = null
+										seedSetsLeft.remove(setKey)
+										seedOrder << set.name
+										gormFlush(session)
+									} catch(setError) {
+										log.error("error processing seed set ${set.name}", setError)
 									}
 								}
-								return true
 							}
-							waitAll(seedTask)
 						}
 					}
 		} catch (Throwable t) {
 			log.error("Error Processing Seed Set Dependencies: ${set.dependsOn.join(', ')}")
 			throw new Exception(t)
 		}
-		
+
 	}
 
 	private checkChecksum(seedName) {
