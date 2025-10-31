@@ -2,7 +2,7 @@ buildscript {
 
     repositories {
         mavenLocal()
-        maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://repo.grails.org/grails/restricted" }
     }
     dependencies {
     }
@@ -22,7 +22,7 @@ ext {
 
 repositories {
     mavenLocal()
-    maven { url "https://repo.grails.org/grails/core" }
+    maven { url "https://repo.grails.org/grails/restricted" }
 }
 
 
@@ -36,7 +36,7 @@ java {
 
 dependencies {
     implementation gradleApi()
-    
+
 }
 
 
@@ -88,5 +88,3 @@ publishing {
         }
     }
 }
-
-
