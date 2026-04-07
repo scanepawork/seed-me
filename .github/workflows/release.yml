@@ -12,7 +12,7 @@ jobs:
   publish:
     name: "Release Jar Files"
     permissions:
-      packages: read  #  pre-release workflow
+      packages: write
       contents: write  #  to create release
       issues: write  #  to modify milestones
     runs-on: ubuntu-24.04
@@ -73,6 +73,14 @@ jobs:
           publishMavenPublicationToSonatypeRepository
           publishPluginMavenPublicationToSonatypeRepository 
           closeSonatypeStagingRepository
+      - name: "📦 Publish to GitHub Packages"
+        run: >
+          ./gradlew publishAllPublicationsToGitHubPackagesRepository
+        env:
+          GRAILS_PUBLISH_RELEASE: 'true'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GPR_PUBLISH_URL: https://maven.pkg.github.com/${{ github.repository }}
       - name: "Generate Build Date file"
         run: echo "$SOURCE_DATE_EPOCH" >> build/BUILD_DATE.txt
       - name: "Upload Build Date file"

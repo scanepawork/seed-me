@@ -27,3 +27,23 @@ extensions.configure(GrailsPublishExtension) {
 	it.publicationName = findProperty('pomMavenPublicationName') ?: 'maven'
 	it.addComponents = project.name != 'seed-me-gradle'
 }
+
+// Register GitHub Packages as a publishing repository when GITHUB_TOKEN is present.
+// Activated by passing GITHUB_TOKEN (and optionally GPR_PUBLISH_URL) as environment variables.
+afterEvaluate {
+	def githubToken = System.getenv('GITHUB_TOKEN')
+	if (githubToken) {
+		publishing {
+			repositories {
+				maven {
+					name = 'GitHubPackages'
+					url = uri(System.getenv('GPR_PUBLISH_URL') ?: 'https://maven.pkg.github.com/wondrify/seed-me')
+					credentials {
+						username = System.getenv('GITHUB_ACTOR') ?: ''
+						password = githubToken
+					}
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,6 @@
+# (c) Copyright 2025-2026 Hewlett Packard Enterprise Development LP
+
+gradle=8.14.4
+grails=7.0.10
+groovy=4.0.20
+java=17.0.14-jbr
